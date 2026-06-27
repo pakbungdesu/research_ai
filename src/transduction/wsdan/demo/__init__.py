@@ -77,7 +77,7 @@ def create_train_loader(train_ds_path, target_resize, batch_size, workers, ch, r
     train_dataset = WsdanDataset(
         phase='train',
         dataset=train_ds_path,
-        transform=get_transform(target_resize, phase=transform_phase),
+        transform=get_transform(target_resize, transform_phase=transform_phase),
         ch=ch,
         rh=rh,
     #==== @@ orig
@@ -106,7 +106,7 @@ def create_validate_loader(validate_ds_path, target_resize, batch_size, workers,
     validate_dataset = WsdanDataset(
         phase='val',
         dataset=validate_ds_path,
-        transform=get_transform(target_resize, phase='val'),
+        transform=get_transform(target_resize, transform_phase='val'),
         ch=ch,
         rh=rh,
         with_alpha_channel=False)
