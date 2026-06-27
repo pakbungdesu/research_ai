@@ -384,7 +384,7 @@ def test(ckpt, class_names_sorted, model=MODEL_DEFAULT, ds_path=TEST_DS_PATH_DEF
     test_dataset = WsdanDataset(
         phase='test',
         dataset=ds_path,
-        transform=get_transform(target_resize, phase='basic'),
+        transform=get_transform(target_resize, transform_phase='basic'),
         ch=mri_ch,
         rh=mri_rh,
         with_alpha_channel=False)
