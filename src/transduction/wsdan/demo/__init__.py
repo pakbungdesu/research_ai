@@ -292,33 +292,6 @@ def _train(with_doppler, total_epochs, model, ds_paths, savepath,
 
     #
 
-    print(f"@@ Initializing network with num_classes = {num_classes}")
-    num_attention_maps = 32  # @@ cf. 16 in 'main_legacy.py'
-
-    net = WSDAN(num_classes, M=num_attention_maps, model=model, pretrained=True)
-    net.to(device)
-    feature_center = torch.zeros(num_classes, num_attention_maps * net.num_features).to(device)
-
-    #
-
-    logs = {
-        'epoch': 0,
-        'train/loss': float("Inf"),
-        'val/loss': float("Inf"),
-        'train/raw_topk_accuracy': 0.,
-        'train/crop_topk_accuracy': 0.,
-        'train/drop_topk_accuracy': 0.,
-        'val/topk_accuracy': 0.
-    }
-
-    learning_rate = logs['lr'] if 'lr' in logs else lr
-
-    opt_type = 'SGD'
-    optimizer = torch.optim.SGD(net.parameters(), lr=learning_rate, momentum=0.9, weight_decay=1e-5)
-    scheduler = torch.optim.lr_scheduler.StepLR(optimizer, step_size=2, gamma=0.99)
-
-    START_EPOCH = 0
-
     if 0:  # @@
         wandb.init(
             # Set the project where this run will be logged
