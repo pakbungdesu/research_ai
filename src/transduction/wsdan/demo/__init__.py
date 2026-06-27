@@ -207,7 +207,6 @@ def _train(with_doppler, total_epochs, model, ds_paths, savepath,
     '''
     device = get_device()
     print("@@ device:", device)
-
     print('@@ with_doppler:', with_doppler)
     print('@@ config_doppler:', config_doppler)
     print('@@ total_epochs:', total_epochs)
@@ -225,9 +224,7 @@ def _train(with_doppler, total_epochs, model, ds_paths, savepath,
 
     target_resize = 250
     batch_size = 8 #@param ["8", "16", "4", "1"] {type:"raw"}
-
     number = 4 #@param ["1", "2", "3", "4", "5"] {type:"raw", allow-input: true}
-
     workers = 2
     print('@@ workers:', workers)
 
@@ -243,41 +240,50 @@ def _train(with_doppler, total_epochs, model, ds_paths, savepath,
     if kfold_ds_path is None:
         print("@@ k-fold is disabled")
         kfold_ds_paths = [(ds_paths['train'], ds_paths['validate'])]
+        
+        # Safe extraction when using standard train/val dictionaries
+        num_classes = len(ds_paths['train'])
     else:
         print("@@ k-fold is ENABLED")
-        #====
-        ##kfold_ds_paths = kfold_ds_paths_debug_v1()
-        ##kfold_ds_paths = kfold_ds_paths_debug_v2()
-        #==== @@
+        
         k = len(ds_paths['kfold_slices_val'])
         print("@@ k:", k)
 
-        #---- ^^ adjust dataset lengths, updating `kfold_ds_path`
-        mix_ben_len_truncated = len(kfold_ds_path['benign']) - len(kfold_ds_path['benign']) % k
-        mix_mal_len_truncated = len(kfold_ds_path['malignant']) - len(kfold_ds_path['malignant']) % k
-        kfold_ds_path['benign'] = kfold_ds_path['benign'][0:mix_ben_len_truncated]
-        kfold_ds_path['malignant'] = kfold_ds_path['malignant'][0:mix_mal_len_truncated]
+        # FIXED: Safely extract class count dynamically from the kfold dictionary keys
+        num_classes = len(kfold_ds_path.keys())
 
-        mix_ben_len, mix_mal_len = len(kfold_ds_path['benign']), len(kfold_ds_path['malignant'])
-        assert mix_ben_len % k == 0
-        assert mix_mal_len % k == 0
-        print("@@ [after truncation] lens of kfold_ds_path:", mix_ben_len, mix_mal_len)
-        #---- $$ adjust dataset lengths
+        # 1. Truncate all classes inside the dictionary so they split evenly across folds
+        for class_key in list(kfold_ds_path.keys()):
+            truncated_len = len(kfold_ds_path[class_key]) - len(kfold_ds_path[class_key]) % k
+            kfold_ds_path[class_key] = kfold_ds_path[class_key][0:truncated_len]
+            print(f"@@ [after truncation] lens of kfold_ds_path['{class_key}']: {len(kfold_ds_path[class_key])}")
 
-        kfold_ds_paths = [slice_mix_ds_path(kfold_ds_path, svb, svm)
-                          for (svb, svm) in ds_paths['kfold_slices_val']]
-        if 1:  # check
-            ##print("@@ kfold_ds_paths:", kfold_ds_paths)
+        # 2. Build the training/validation distribution structures dynamically
+        kfold_ds_paths = []
+        
+        # Loop through each cross-validation fold slice rule
+        for fold_idx in range(k):
+            train_fold_dict = {}
+            val_fold_dict = {}
+            
+            # Extract and split paths for EVERY class key present in the dictionary
+            for class_key in kfold_ds_path.keys():
+                slice_v = ds_paths['kfold_slices_val'][fold_idx][class_key]
+                
+                # Split paths using the codebase's native utility function
+                val_paths, train_paths = slice_split(kfold_ds_path[class_key], slice_v)
+                
+                train_fold_dict[class_key] = train_paths
+                val_fold_dict[class_key] = val_paths
+                
+            kfold_ds_paths.append((train_fold_dict, val_fold_dict))
+
+        if 1:  # Verification tracking
             print("@@ -------- `kfold_ds_paths`, check: ^^")
-            for smdp in kfold_ds_paths:
-                print("@@ ----")
-                print("@@ bt:", len(smdp[0]['benign']))
-                print("@@ mt:", len(smdp[0]['malignant']))
-                print("@@ bv:", len(smdp[1]['benign']))
-                print("@@ mv:", len(smdp[1]['malignant']))
+            for idx, (t_dict, v_dict) in enumerate(kfold_ds_paths):
+                print(f"@@ Fold {idx} -> Train: {[len(v) for v in t_dict.values()]}, Val: {[len(v) for v in v_dict.values()]}")
             print("@@ -------- `kfold_ds_paths`, check: $$")
-            ##exit()  # !!!!
-        #====
+            
 
     kfold_loaders = [(
         create_train_loader(tv_ds_path[0], target_resize, batch_size, workers, ch, rh, with_doppler, transform_phase=transform_phase),
@@ -286,7 +292,7 @@ def _train(with_doppler, total_epochs, model, ds_paths, savepath,
 
     #
 
-    num_classes = len(ds_paths['train'])
+    print(f"@@ Initializing network with num_classes = {num_classes}")
     num_attention_maps = 32  # @@ cf. 16 in 'main_legacy.py'
 
     net = WSDAN(num_classes, M=num_attention_maps, model=model, pretrained=True)
