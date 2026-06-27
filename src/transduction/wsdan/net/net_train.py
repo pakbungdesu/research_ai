@@ -111,10 +111,11 @@ def _train(device, logs, train_loader, net, feature_center, optimizer, pbar,
         y_pred_drop, _, _ = net(drop_images)
 
         # loss
-        batch_loss = cross_entropy_loss(y_pred_raw, y) / 3. + \
-                        cross_entropy_loss(y_pred_crop, y) / 3. + \
-                        cross_entropy_loss(y_pred_drop, y) / 3. + \
-                        center_loss(feature_matrix, feature_center_batch)
+        # Change the / 3. flat splits to emphasize the cropped focus:
+        batch_loss = cross_entropy_loss(y_pred_raw, y) * 0.2 + \
+             cross_entropy_loss(y_pred_crop, y) * 0.6 + \
+             cross_entropy_loss(y_pred_drop, y) * 0.2 + \
+             center_loss(feature_matrix, feature_center_batch)
 
         # backward
         batch_loss.backward()
