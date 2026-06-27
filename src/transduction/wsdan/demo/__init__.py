@@ -195,7 +195,16 @@ def kfold_ds_paths_debug_v2():  # hardcoded w.r.t. 'Dataset_train_test_val.zip'
 
 def _train(with_doppler, total_epochs, model, ds_paths, savepath,
            ch=None, rh=None,
-           config_doppler=None):
+           config_doppler=None, transform_phase='train'):
+    
+    '''
+    :param with_doppler: if True, the training will use doppler mask to augment the data
+    :param total_epochs: total number of epochs to train
+    :param model: the model architecture to use (e.g., 'densenet121', 'resnet50')
+    :param ds_paths: a dictionary containing paths for training and validation datasets
+    :param savepath: the path where the trained model and logs will be saved
+    :param transform_phase: the phase of the transformation to use for training (e.g., 'train', 'basic')
+    '''
     device = get_device()
     print("@@ device:", device)
 
@@ -271,8 +280,8 @@ def _train(with_doppler, total_epochs, model, ds_paths, savepath,
         #====
 
     kfold_loaders = [(
-        create_train_loader(tv_ds_path[0], target_resize, batch_size, workers, ch, rh, with_doppler),
-        create_validate_loader(tv_ds_path[1], target_resize, batch_size, workers, ch, rh))
+        create_train_loader(tv_ds_path[0], target_resize, batch_size, workers, ch, rh, with_doppler, transform_phase=transform_phase),
+        create_validate_loader(tv_ds_path[1], target_resize, batch_size, workers, ch, rh, transform_phase='val'))
         for tv_ds_path in kfold_ds_paths]
 
     #
