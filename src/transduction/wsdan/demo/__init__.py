@@ -281,7 +281,7 @@ def _train(with_doppler, total_epochs, model, ds_paths, savepath,
 
     kfold_loaders = [(
         create_train_loader(tv_ds_path[0], target_resize, batch_size, workers, ch, rh, with_doppler, transform_phase=transform_phase),
-        create_validate_loader(tv_ds_path[1], target_resize, batch_size, workers, ch, rh, transform_phase='val'))
+        create_validate_loader(tv_ds_path[1], target_resize, batch_size, workers, ch, rh))
         for tv_ds_path in kfold_ds_paths]
 
     #
