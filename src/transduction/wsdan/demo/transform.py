@@ -93,9 +93,9 @@ def get_transform_center_crop(target_size, scaling_factor=1.0):
 # Define the dictionary of transform functions
 transform_fn = {
     # 'basic': transform_basic,
-    'basic': get_transform(target_size=target_size, phase='basic'),
+    'basic': get_transform(target_size=target_size, transform_phase='basic'),
     'center_crop': get_transform_center_crop(target_size=target_size, scaling_factor=1.3),
-    'train': get_transform(target_size=target_size),
-    'val': get_transform(target_size=target_size, phase='val'),
-    'test': get_transform(target_size=target_size, phase='test'),
+    'train': get_transform(target_size=target_size, transform_phase='train'),
+    'val': get_transform(target_size=target_size, transform_phase='val'),
+    'test': get_transform(target_size=target_size, transform_phase='test'),
 }
