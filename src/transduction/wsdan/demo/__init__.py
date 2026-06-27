@@ -66,7 +66,7 @@ def slice_split(li_in_const, slice_in):
     del li_out[slice_in]
     return li_out_sliced, li_out
 
-def create_train_loader(train_ds_path, target_resize, batch_size, workers, ch, rh, with_doppler=False):
+def create_train_loader(train_ds_path, target_resize, batch_size, workers, ch, rh, with_doppler=False, transform_phase='train'):
     #----!!!!
     if 0:
         from ..net.doppler import get_to_doppler
@@ -77,7 +77,7 @@ def create_train_loader(train_ds_path, target_resize, batch_size, workers, ch, r
     train_dataset = WsdanDataset(
         phase='train',
         dataset=train_ds_path,
-        transform=get_transform(target_resize, phase='basic'),
+        transform=get_transform(target_resize, phase=transform_phase),
         ch=ch,
         rh=rh,
     #==== @@ orig

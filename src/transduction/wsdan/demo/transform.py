@@ -16,11 +16,11 @@ transform_basic = transforms.Compose([
                 imagenet_normalize
             ])
 
-def get_transform(target_size, phase='train'):
+def get_transform(target_size, transform_phase='train'):
     """
     Predefined transformation pipe for the dataset
     :param target_size: tuple of (W,H) result image from the pipe
-    :param phase: train/val/test phase of different transformation e.g. test will not need RandomCrop
+    :param transform_phase: basic/train/val/test phase of different transformation e.g. test will not need RandomCrop
     :return: a transformation function to target_size
     """
     # check target_size
@@ -42,16 +42,16 @@ def get_transform(target_size, phase='train'):
                 transforms.ToTensor(),
                 imagenet_normalize
             ]),
+        # REWRITTEN 'train' phase using your safe brain-MRI pattern
         'train':
             transforms.Compose([
-                enlarge,
-                transforms.RandomRotation(45, interpolation=transforms.functional.InterpolationMode.BILINEAR, expand=True),
-                transforms.CenterCrop(target_size),
-                transforms.RandomHorizontalFlip(0.5),
-                transforms.RandomPerspective(0.2),
-                transforms.RandomApply([
-                    transforms.ColorJitter(brightness=0.126, contrast=0.2)
-                ], p=0.5),
+                transforms.Resize(target_size),
+                transforms.RandomAffine(
+                    degrees=8,               # Safe minor rotation
+                    translate=(0.04, 0.04),  # Safe minor shifting
+                    scale=(0.96, 1.04)       # Safe minor scaling
+                ),
+                transforms.ColorJitter(brightness=0.1, contrast=0.1), # Safe intensity tweaks
                 transforms.ToTensor(),
                 imagenet_normalize
             ]),
@@ -72,8 +72,8 @@ def get_transform(target_size, phase='train'):
     }
 
     # check phase
-    if phase in transform_dict:
-        return transform_dict[phase]
+    if transform_phase in transform_dict:
+        return transform_dict[transform_phase]
     else:
         raise Exception("Unknown phase specified")
 
