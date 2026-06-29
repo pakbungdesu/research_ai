@@ -81,8 +81,8 @@ def _train(device, logs, train_loader, net, feature_center, optimizer, pbar,
             crop_images, _ = batch_augment(X, paths, attention_map[:, :1, :, :],
                 savepath=savepath_batch,
                 use_doppler=with_doppler, config_doppler=config_doppler,
-                mode='crop', theta=(0.85, 0.98),   # Focus ONLY on the peak attention zones
-                padding_ratio=0.0)    # Eliminate noisy background padding completely)
+                mode='crop', theta=(0.75, 0.95),   # Lower the minimum threshold to 0.75 for safety
+                padding_ratio=0.05)   # Use a small 5% safety margin to prevent 0-pixel collapses
 
         if savepath_batch:  # @@
             for idx in range(crop_images.shape[0]):
