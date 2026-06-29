@@ -82,7 +82,7 @@ def _train(device, logs, train_loader, net, feature_center, optimizer, pbar,
                 savepath=savepath_batch,
                 use_doppler=with_doppler, config_doppler=config_doppler,
                 mode='crop', theta=(0.75, 0.95),   # Lower the minimum threshold to 0.75 for safety
-                padding_ratio=0.05)   # Use a small 5% safety margin to prevent 0-pixel collapses
+                padding_ratio=0.1)   # Use a small 10% safety margin to prevent 0-pixel collapses
 
         if savepath_batch:  # @@
             for idx in range(crop_images.shape[0]):
