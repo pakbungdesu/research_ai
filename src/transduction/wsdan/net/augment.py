@@ -76,10 +76,20 @@ def batch_augment(images, paths, attention_map, savepath=None,
 
             crop_mask = functional.interpolate(atten_map, size=(imgH, imgW), mode='bilinear') >= theta_c
             nonzero_indices = torch.nonzero(crop_mask[0, 0, ...])
-            height_min = max(int(nonzero_indices[:, 0].min().item() - padding_ratio * imgH), 0)
-            height_max = min(int(nonzero_indices[:, 0].max().item() + padding_ratio * imgH), imgH)
-            width_min = max(int(nonzero_indices[:, 1].min().item() - padding_ratio * imgW), 0)
-            width_max = min(int(nonzero_indices[:, 1].max().item() + padding_ratio * imgW), imgW)
+            
+            # --- EMERGENCY SAFE FALLBACK ---
+            # If no pixels pass the attention threshold, fallback to a standard 75% center crop
+            if nonzero_indices.numel() == 0:
+                height_min = max(int(0.125 * imgH), 0)
+                height_max = min(int(0.875 * imgH), imgH)
+                width_min  = max(int(0.125 * imgW), 0)
+                width_max  = min(int(0.875 * imgW), imgW)
+            else:
+                # Original logic runs normally if features are detected
+                height_min = max(int(nonzero_indices[:, 0].min().item() - padding_ratio * imgH), 0)
+                height_max = min(int(nonzero_indices[:, 0].max().item() + padding_ratio * imgH), imgH)
+                width_min  = max(int(nonzero_indices[:, 1].min().item() - padding_ratio * imgW), 0)
+                width_max  = min(int(nonzero_indices[:, 1].max().item() + padding_ratio * imgW), imgW)
 
             #-------- @@
             #logger.debug(f'[idx={idx}] crop: ({width_min}, {height_min}), ({width_max}, {height_max})')
