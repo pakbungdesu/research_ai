@@ -110,13 +110,29 @@ def _train(device, logs, train_loader, net, feature_center, optimizer, pbar,
 
         # drop images forward
         y_pred_drop, _, _ = net(drop_images)
+        
+        # 1. Convert integer targets to continuous floats (0.0, 1.0, 2.0, 3.0)
+        float_targets = y.float().unsqueeze(1)
+
+        # 2. Convert raw logits to probabilities
+        probs_raw = torch.softmax(y_pred_raw, dim=1)
+
+        # 3. Create a continuous mapping vector matching your E0-E3 stages
+        class_values = torch.tensor([0.0, 1.0, 2.0, 3.0], device=device)
+
+        # 4. Calculate the expected ordinal value for the batch predictions
+        pred_scalar_raw = torch.sum(probs_raw * class_values, dim=1, keepdim=True)
+
+        # 5. Compute the actual continuous MSE penalty
+        loss_ordinal_mse = functional.mse_loss(pred_scalar_raw, float_targets)
 
         # loss
         # Change the / 3. flat splits to emphasize the cropped focus:
         batch_loss = cross_entropy_loss(y_pred_raw, y) * 0.2 + \
              cross_entropy_loss(y_pred_crop, y) * 0.6 + \
              cross_entropy_loss(y_pred_drop, y) * 0.2 + \
-             center_loss(feature_matrix, feature_center_batch)
+             center_loss(feature_matrix, feature_center_batch) + \
+            (0.1 * loss_ordinal_mse)
 
         # backward
         batch_loss.backward()
@@ -144,6 +160,7 @@ def _train(device, logs, train_loader, net, feature_center, optimizer, pbar,
             #"train/epoch": (step + 1 + (n_steps_per_epoch * epoch)) / n_steps_per_epoch,
             "train/example_ct": example_ct,
             "train/loss": epoch_loss,
+            "train/ordinal_mse": loss_ordinal_mse.item(),
             "train/raw_acc": epoch_raw_acc[0],
             "train/crop_acc": epoch_crop_acc[0],
             "train/drop_acc": epoch_drop_acc[0],
@@ -157,6 +174,7 @@ def _train(device, logs, train_loader, net, feature_center, optimizer, pbar,
 
     # end of this epoch
     logs['train/{}'.format(loss_container.name)] = epoch_loss
+    logs['train/ordinal_mse'] = loss_ordinal_mse.item()
     logs['train/raw_{}'.format(raw_metric.name)] = epoch_raw_acc
     logs['train/crop_{}'.format(crop_metric.name)] = epoch_crop_acc
     logs['train/drop_{}'.format(drop_metric.name)] = epoch_drop_acc
