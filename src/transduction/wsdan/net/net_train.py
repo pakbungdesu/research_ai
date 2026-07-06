@@ -81,7 +81,7 @@ def _train(device, logs, train_loader, net, feature_center, optimizer, pbar,
             crop_images, _ = batch_augment(X, paths, attention_map[:, :1, :, :],
                 savepath=savepath_batch,
                 use_doppler=with_doppler, config_doppler=config_doppler,
-                mode='crop', theta=(0.7, 0.98),
+                mode='crop', theta=(0.7, 0.95),
                 padding_ratio=0.1)
 
         if savepath_batch:  # @@
