@@ -118,7 +118,7 @@ def _train(device, logs, train_loader, net, feature_center, optimizer, pbar,
         probs_raw = torch.softmax(y_pred_raw, dim=1)
 
         # 3. Create a continuous mapping vector matching your E0-E3 stages
-        class_values = torch.tensor([0.0, 1.0, 2.0, 3.0], device=device)
+        class_values = torch.tensor([0.0, 1.0, 2.2, 3.5], device=device)
 
         # 4. Calculate the expected ordinal value for the batch predictions
         pred_scalar_raw = torch.sum(probs_raw * class_values, dim=1, keepdim=True)
