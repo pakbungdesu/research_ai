@@ -323,7 +323,7 @@ class CenterLoss(nn.Module):
 ##################################
 
 # General loss functions
-cross_entropy_loss = nn.CrossEntropyLoss()
+cross_entropy_loss = nn.CrossEntropyLoss(label_smoothing=0.1)
 center_loss = CenterLoss()
 
 ##################################
