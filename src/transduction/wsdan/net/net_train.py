@@ -132,7 +132,7 @@ def _train(device, logs, train_loader, net, feature_center, optimizer, pbar,
              cross_entropy_loss(y_pred_crop, y) * 0.6 + \
              cross_entropy_loss(y_pred_drop, y) * 0.2 + \
              center_loss(feature_matrix, feature_center_batch) + \
-            (0.3 * loss_ordinal_mse)
+            loss_ordinal_mse
 
         # backward
         batch_loss.backward()
